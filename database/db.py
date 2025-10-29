@@ -124,12 +124,18 @@ class Database:
                 session.add(user)
                 session.commit()
                 session.refresh(user)
+            # Expunge the object to detach it from session before closing
+            session.expunge(user)
             return user
     
     def get_user(self, user_id):
         """Get user by ID"""
         with self.get_session() as session:
-            return session.query(User).filter_by(user_id=user_id).first()
+            user = session.query(User).filter_by(user_id=user_id).first()
+            if user:
+                # Expunge the object to detach it from session before closing
+                session.expunge(user)
+            return user
     
     def update_user_balance(self, user_id, amount, add=True):
         """Update user balance"""
@@ -160,17 +166,27 @@ class Database:
             session.add(account)
             session.commit()
             session.refresh(account)
+            # Expunge the object to detach it from session before closing
+            session.expunge(account)
             return account
     
     def get_account(self, account_id):
         """Get account by ID"""
         with self.get_session() as session:
-            return session.query(Account).filter_by(id=account_id).first()
+            account = session.query(Account).filter_by(id=account_id).first()
+            if account:
+                # Expunge the object to detach it from session before closing
+                session.expunge(account)
+            return account
     
     def get_user_accounts(self, user_id):
         """Get all accounts for a user"""
         with self.get_session() as session:
-            return session.query(Account).filter_by(user_id=user_id).all()
+            accounts = session.query(Account).filter_by(user_id=user_id).all()
+            # Expunge all objects to detach them from session before closing
+            for account in accounts:
+                session.expunge(account)
+            return accounts
     
     def update_account_status(self, account_id, status):
         """Update account status"""
@@ -186,7 +202,11 @@ class Database:
     def get_country_by_iso2(self, iso2_code):
         """Get country by ISO2 code"""
         with self.get_session() as session:
-            return session.query(Country).filter_by(iso2_code=iso2_code).first()
+            country = session.query(Country).filter_by(iso2_code=iso2_code).first()
+            if country:
+                # Expunge the object to detach it from session before closing
+                session.expunge(country)
+            return country
     
     def get_all_countries(self, active_only=True):
         """Get all countries"""
@@ -194,7 +214,11 @@ class Database:
             query = session.query(Country)
             if active_only:
                 query = query.filter_by(is_active=True)
-            return query.all()
+            countries = query.all()
+            # Expunge all objects to detach them from session before closing
+            for country in countries:
+                session.expunge(country)
+            return countries
     
     # Settings operations
     def get_setting(self, key, default=None):
