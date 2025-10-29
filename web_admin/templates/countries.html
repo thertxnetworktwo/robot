@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Countries{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Countries Management</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-globe"></i> All Countries
+    </div>
+    <div class="card-body">
+        <table class="table table-striped data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>ISO2 Code</th>
+                    <th>Phone Prefix</th>
+                    <th>Price</th>
+                    <th>Capacity</th>
+                    <th>Current</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for country in countries %}
+                <tr>
+                    <td>{{ country.name }}</td>
+                    <td><strong>{{ country.iso2_code }}</strong></td>
+                    <td>{{ country.phone_prefix }}</td>
+                    <td>${{ "%.2f"|format(country.price) }}</td>
+                    <td>{{ country.capacity }}</td>
+                    <td>{{ country.current_count }} / {{ country.capacity }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if country.is_active else 'secondary' }}">
+                            {{ 'Active' if country.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

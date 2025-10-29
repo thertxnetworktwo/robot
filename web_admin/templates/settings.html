@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Settings Management</h1>
+</div>
+
+<form method="POST">
+    <!-- Bot Settings -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="fas fa-robot"></i> Bot Settings
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Bot Status</label>
+                    <select class="form-select" name="setting_bot_status">
+                        <option value="on" {{ 'selected' if settings.get('bot_status') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('bot_status') == 'off' }}>OFF (Maintenance)</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Add Account Lock</label>
+                    <select class="form-select" name="setting_add_account_locked">
+                        <option value="unlocked" {{ 'selected' if settings.get('add_account_locked') == 'unlocked' }}>UNLOCKED</option>
+                        <option value="locked" {{ 'selected' if settings.get('add_account_locked') == 'locked' }}>LOCKED</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security Settings -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="fas fa-shield-alt"></i> Security Settings
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">2FA Requirement</label>
+                    <select class="form-select" name="setting_two_fa_required">
+                        <option value="on" {{ 'selected' if settings.get('two_fa_required') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('two_fa_required') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Spam Checker</label>
+                    <select class="form-select" name="setting_spam_checker">
+                        <option value="on" {{ 'selected' if settings.get('spam_checker') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('spam_checker') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Contact Checker</label>
+                    <select class="form-select" name="setting_contact_checker">
+                        <option value="on" {{ 'selected' if settings.get('contact_checker') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('contact_checker') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Freeze Checker</label>
+                    <select class="form-select" name="setting_freeze_checker">
+                        <option value="on" {{ 'selected' if settings.get('freeze_checker') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('freeze_checker') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Confirmation Time (minutes)</label>
+                    <input type="number" class="form-control" name="setting_confirmation_time" value="{{ settings.get('confirmation_time', '5') }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Withdrawal Settings -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="fas fa-money-bill"></i> Withdrawal Settings
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Withdrawals Enabled</label>
+                    <select class="form-select" name="setting_withdrawals_enabled">
+                        <option value="on" {{ 'selected' if settings.get('withdrawals_enabled') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('withdrawals_enabled') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">TRX Withdrawal</label>
+                    <select class="form-select" name="setting_trx_withdrawal">
+                        <option value="on" {{ 'selected' if settings.get('trx_withdrawal') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('trx_withdrawal') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Ledger Card Withdrawal</label>
+                    <select class="form-select" name="setting_ledger_withdrawal">
+                        <option value="on" {{ 'selected' if settings.get('ledger_withdrawal') == 'on' }}>ON</option>
+                        <option value="off" {{ 'selected' if settings.get('ledger_withdrawal') == 'off' }}>OFF</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Minimum Withdraw Balance</label>
+                    <input type="number" step="0.01" class="form-control" name="setting_min_withdraw" value="{{ settings.get('min_withdraw', '10') }}">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Maximum Withdraw Balance</label>
+                    <input type="number" step="0.01" class="form-control" name="setting_max_withdraw" value="{{ settings.get('max_withdraw', '10000') }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+    </div>
+</form>
+{% endblock %}

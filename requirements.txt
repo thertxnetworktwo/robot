@@ -1,0 +1,27 @@
+# Telegram Bot Dependencies
+python-telegram-bot==20.7
+telethon==1.34.0
+phonenumbers==8.13.27
+pycountry==23.12.11
+cryptg==0.4.0
+aiohttp==3.9.1
+
+# Web Admin Panel Dependencies
+flask==3.0.0
+flask-login==0.6.3
+flask-cors==4.0.0
+Jinja2==3.1.2
+sqlalchemy==2.0.23
+wtforms==3.1.1
+werkzeug==3.0.1
+
+# Shared Dependencies
+python-dotenv==1.0.0
+bcrypt==4.1.2
+
+# Database
+alembic==1.13.1
+
+# Utilities
+requests==2.31.0
+pytz==2023.3

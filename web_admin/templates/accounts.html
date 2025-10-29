@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Accounts Management</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-mobile-alt"></i> All Accounts
+    </div>
+    <div class="card-body">
+        <table class="table table-striped data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Phone Number</th>
+                    <th>Country</th>
+                    <th>User ID</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in accounts %}
+                <tr>
+                    <td>{{ account.id }}</td>
+                    <td>{{ account.phone_number }}</td>
+                    <td>{{ account.country_iso2 }}</td>
+                    <td>{{ account.user_id }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if account.status == 'approved' else 'warning' if account.status == 'pending' else 'danger' }}">
+                            {{ account.status.upper() }}
+                        </span>
+                    </td>
+                    <td>{{ account.created_at.strftime('%Y-%m-%d %H:%M') if account.created_at else 'N/A' }}</td>
+                    <td>
+                        {% if account.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('approve_account', account_id=account.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-success btn-action">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_account', account_id=account.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger btn-action">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
