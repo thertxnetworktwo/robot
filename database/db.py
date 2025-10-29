@@ -124,7 +124,7 @@ class Database:
                 session.add(user)
                 session.commit()
                 session.refresh(user)
-            # Expunge the object to detach it from session before closing
+            # Expunge to detach from session and prevent DetachedInstanceError
             session.expunge(user)
             return user
     
@@ -133,7 +133,7 @@ class Database:
         with self.get_session() as session:
             user = session.query(User).filter_by(user_id=user_id).first()
             if user:
-                # Expunge the object to detach it from session before closing
+                # Expunge to detach from session and prevent DetachedInstanceError
                 session.expunge(user)
             return user
     
@@ -166,7 +166,7 @@ class Database:
             session.add(account)
             session.commit()
             session.refresh(account)
-            # Expunge the object to detach it from session before closing
+            # Expunge to detach from session and prevent DetachedInstanceError
             session.expunge(account)
             return account
     
@@ -175,7 +175,7 @@ class Database:
         with self.get_session() as session:
             account = session.query(Account).filter_by(id=account_id).first()
             if account:
-                # Expunge the object to detach it from session before closing
+                # Expunge to detach from session and prevent DetachedInstanceError
                 session.expunge(account)
             return account
     
@@ -183,7 +183,7 @@ class Database:
         """Get all accounts for a user"""
         with self.get_session() as session:
             accounts = session.query(Account).filter_by(user_id=user_id).all()
-            # Expunge all objects to detach them from session before closing
+            # Expunge all to detach from session and prevent DetachedInstanceError
             for account in accounts:
                 session.expunge(account)
             return accounts
@@ -204,7 +204,7 @@ class Database:
         with self.get_session() as session:
             country = session.query(Country).filter_by(iso2_code=iso2_code).first()
             if country:
-                # Expunge the object to detach it from session before closing
+                # Expunge to detach from session and prevent DetachedInstanceError
                 session.expunge(country)
             return country
     
@@ -215,7 +215,7 @@ class Database:
             if active_only:
                 query = query.filter_by(is_active=True)
             countries = query.all()
-            # Expunge all objects to detach them from session before closing
+            # Expunge all to detach from session and prevent DetachedInstanceError
             for country in countries:
                 session.expunge(country)
             return countries
