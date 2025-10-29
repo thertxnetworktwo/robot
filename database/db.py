@@ -35,7 +35,7 @@ class Database:
         with self.get_session() as session:
             # Create default admin if not exists
             admin = session.query(Admin).filter_by(user_id=1).first()
-            if not admin:
+            if not admin and config.ADMIN_PASSWORD:
                 password_hash = bcrypt.hashpw(
                     config.ADMIN_PASSWORD.encode('utf-8'),
                     bcrypt.gensalt()
