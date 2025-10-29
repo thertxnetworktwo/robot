@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Statistics & Reports</h1>
+</div>
+
+<!-- Overview Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-primary text-white">
+            <i class="fas fa-users fa-2x mb-2"></i>
+            <h3>{{ total_users }}</h3>
+            <p>Total Users</p>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card stat-card bg-success text-white">
+            <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+            <h3>{{ total_accounts }}</h3>
+            <p>Total Accounts</p>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card stat-card bg-info text-white">
+            <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+            <h3>${{ "%.2f"|format(total_balance) }}</h3>
+            <p>Total Balance</p>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue by Country -->
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-globe"></i> Revenue by Country
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Country</th>
+                    <th>Accounts</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in country_revenue %}
+                <tr>
+                    <td>{{ item.country }}</td>
+                    <td>{{ item.count }}</td>
+                    <td>${{ "%.2f"|format(item.revenue) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    <th>{{ country_revenue|sum(attribute='count') }}</th>
+                    <th>${{ "%.2f"|format(country_revenue|sum(attribute='revenue')) }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

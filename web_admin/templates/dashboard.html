@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card card bg-primary text-white">
+            <i class="fas fa-users fa-2x mb-2"></i>
+            <h3>{{ stats.total_users }}</h3>
+            <p>Total Users</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card card bg-success text-white">
+            <i class="fas fa-check-circle fa-2x mb-2"></i>
+            <h3>{{ stats.approved_accounts }}</h3>
+            <p>Approved Accounts</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card card bg-warning text-white">
+            <i class="fas fa-clock fa-2x mb-2"></i>
+            <h3>{{ stats.pending_accounts }}</h3>
+            <p>Pending Accounts</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card card bg-info text-white">
+            <i class="fas fa-money-bill fa-2x mb-2"></i>
+            <h3>${{ "%.2f"|format(stats.total_balance) }}</h3>
+            <p>Total Balance</p>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-clock"></i> Recent Accounts
+            </div>
+            <div class="card-body">
+                {% if recent_accounts %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Phone</th>
+                            <th>Country</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in recent_accounts %}
+                        <tr>
+                            <td>{{ account.phone_number }}</td>
+                            <td>{{ account.country_iso2 }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if account.status == 'approved' else 'warning' if account.status == 'pending' else 'danger' }}">
+                                    {{ account.status.upper() }}
+                                </span>
+                            </td>
+                            <td>{{ account.created_at.strftime('%Y-%m-%d') if account.created_at else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No recent accounts</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-money-bill-wave"></i> Pending Withdrawals
+            </div>
+            <div class="card-body">
+                {% if pending_withdrawals %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for withdrawal in pending_withdrawals %}
+                        <tr>
+                            <td>{{ withdrawal.user_id }}</td>
+                            <td>${{ "%.2f"|format(withdrawal.amount) }}</td>
+                            <td>{{ withdrawal.method.upper() }}</td>
+                            <td>{{ withdrawal.request_date.strftime('%Y-%m-%d') if withdrawal.request_date else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No pending withdrawals</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-pie"></i> Accounts by Status
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-bar"></i> Accounts by Country
+            </div>
+            <div class="card-body">
+                <canvas id="countryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|tojson }},
+            datasets: [{
+                data: {{ status_data|tojson }},
+                backgroundColor: [
+                    '#28a745',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6c757d',
+                    '#17a2b8'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+    
+    // Country Chart
+    const countryCtx = document.getElementById('countryChart').getContext('2d');
+    new Chart(countryCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ country_labels|tojson }},
+            datasets: [{
+                label: 'Accounts',
+                data: {{ country_data|tojson }},
+                backgroundColor: '#667eea'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
