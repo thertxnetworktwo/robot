@@ -404,10 +404,10 @@ Server
 ## Error Handling
 
 ### Bot Errors
-- Invalid phone format → User-friendly message
+- Invalid phone format → User-friendly error message
 - Session creation failure → Error message with restart option
 - OTP timeout → Restart flow
-- Invalid OTP code → Retry option
+- Invalid OTP code → Error message with retry option
 
 ### Web Admin Errors
 - Database errors → Rollback transaction

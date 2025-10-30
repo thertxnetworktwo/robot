@@ -182,12 +182,11 @@ A comprehensive Telegram bot system for managing Telegram account sessions with 
 #### Adding an Account (User):
 1. User: `/start`
 2. User: `+8801712345678`
-3. Bot: "Detected Bangladesh (BD). Sending verification code..."
-4. Bot: "The code sent to number +8801712345678"
-5. User: `12345` (OTP)
-6. Bot: "Session created! Pending approval..."
-7. [System runs checks]
-8. Bot: "Account approved! Balance added: $2.00"
+3. Bot: "Detected Bangladesh (BD). Sending verification code..." then "The code sent to number +8801712345678"
+4. User: `12345` (OTP)
+5. Bot: "Session created! Pending approval..."
+6. [System runs checks]
+7. Bot: "Account approved! Balance added: $2.00"
 
 #### Approving an Account (Admin):
 1. Login to web panel
