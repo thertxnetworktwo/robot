@@ -5,7 +5,7 @@ from contextlib import contextmanager
 import bcrypt
 from pathlib import Path
 import config
-from database.models import Base, User, Account, Country, Admin, Setting, Withdrawal, Message, Channel
+from database.models import Base, User, Account, Country, Admin, Setting, Withdrawal, Message, Channel, LoginAttempt
 
 
 class Database:
@@ -244,6 +244,55 @@ class Database:
         with self.get_session() as session:
             message = session.query(Message).filter_by(key=key).first()
             return message.content if message else None
+    
+    # Login attempt operations
+    def log_login_attempt(self, user_id, phone_number, attempt_type, success=False, 
+                         error_message=None, code_hash=None):
+        """Log a login attempt"""
+        with self.get_session() as session:
+            attempt = LoginAttempt(
+                user_id=user_id,
+                phone_number=phone_number,
+                attempt_type=attempt_type,
+                success=success,
+                error_message=error_message,
+                code_hash=code_hash
+            )
+            session.add(attempt)
+            session.commit()
+            session.refresh(attempt)
+            session.expunge(attempt)
+            return attempt
+    
+    def check_code_reuse(self, phone_number, code_hash):
+        """Check if an OTP code has been used before for this phone number"""
+        with self.get_session() as session:
+            from datetime import datetime, timedelta
+            # Check for code reuse in the last 24 hours
+            time_threshold = datetime.utcnow() - timedelta(hours=24)
+            
+            existing_attempt = session.query(LoginAttempt).filter(
+                LoginAttempt.phone_number == phone_number,
+                LoginAttempt.code_hash == code_hash,
+                LoginAttempt.attempt_time >= time_threshold,
+                LoginAttempt.success == True
+            ).first()
+            
+            return existing_attempt is not None
+    
+    def get_failed_attempts_count(self, phone_number, hours=1):
+        """Get count of failed login attempts for a phone number in the last X hours"""
+        with self.get_session() as session:
+            from datetime import datetime, timedelta
+            time_threshold = datetime.utcnow() - timedelta(hours=hours)
+            
+            count = session.query(func.count(LoginAttempt.id)).filter(
+                LoginAttempt.phone_number == phone_number,
+                LoginAttempt.success == False,
+                LoginAttempt.attempt_time >= time_threshold
+            ).scalar()
+            
+            return count or 0
 
 
 # Global database instance

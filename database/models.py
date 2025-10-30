@@ -109,3 +109,21 @@ class Channel(Base):
     channel_id = Column(String(100))
     channel_username = Column(String(100))
     is_mandatory = Column(Boolean, default=True)
+
+
+class LoginAttempt(Base):
+    __tablename__ = 'login_attempts'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id'))
+    phone_number = Column(String(20), nullable=False)
+    attempt_type = Column(String(20), nullable=False)  # otp_request/otp_verify/password_verify
+    success = Column(Boolean, default=False)
+    error_message = Column(Text)
+    ip_address = Column(String(50))
+    user_agent = Column(String(255))
+    attempt_time = Column(DateTime, default=datetime.utcnow)
+    code_hash = Column(String(255))  # Hashed OTP code to detect reuse
+    
+    # Relationships
+    user = relationship("User")
