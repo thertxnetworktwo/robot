@@ -93,13 +93,12 @@ Default login:
 
 1. Start the bot: `/start`
 2. Send your phone number with + prefix: `+8801712345678`
-3. Bot automatically detects country and starts submission process
-4. Provide API ID and API Hash
-5. Provide 2FA password (if enabled)
-6. Enter OTP code received on Telegram
-7. Wait for approval
-8. Check balance: `/balance`
-9. Request withdrawal: `/withdraw`
+3. Bot automatically detects country and starts session creation
+4. Provide 2FA password (if enabled and if you have one)
+5. Enter OTP code received on Telegram
+6. Wait for approval
+7. Check balance: `/balance`
+8. Request withdrawal: `/withdraw`
 
 ### For Admins (Web Panel)
 
