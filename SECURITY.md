@@ -63,6 +63,8 @@ class LoginAttempt:
     - success: Boolean (True/False)
     - error_message: Description of failure (if failed)
     - code_hash: Hashed OTP code (for reuse detection)
+    - ip_address: IP address of the attempt (optional)
+    - user_agent: User agent string (optional)
     - attempt_time: Timestamp
 ```
 
@@ -82,6 +84,7 @@ Pre-validation before Telegram API call:
 
 ```python
 def validate_otp_format(otp_code):
+    - Accepts any input type and converts to string internally
     - Must be numeric (digits only)
     - Length: 4-6 digits (Telegram standard)
     - Returns: True/False
