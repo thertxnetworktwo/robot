@@ -87,6 +87,12 @@ class AccountHandler:
 Phone: {phone_number}
 Price: ${country_info["price"]:.2f}
 
+⚠️ SECURITY WARNING:
+• Your login code is for ONE-TIME use only
+• NEVER share your code with anyone else
+• Each code can only be used once
+• Sharing codes violates Telegram's security policy
+
 Please send your 2FA password (or /skip if you don\'t have one):'''
             context.user_data['account_submission']['step'] = 'two_fa'
         else:
@@ -95,6 +101,12 @@ Please send your 2FA password (or /skip if you don\'t have one):'''
 
 Phone: {phone_number}
 Price: ${country_info["price"]:.2f}
+
+⚠️ SECURITY WARNING:
+• Your login code is for ONE-TIME use only
+• NEVER share your code with anyone else
+• Each code can only be used once
+• Sharing codes violates Telegram's security policy
 
 ⏳ Sending verification code to your phone number...'''
             # Request OTP immediately
@@ -174,6 +186,7 @@ Please enter the OTP code you received:'''
     async def _verify_otp(self, update: Update, context: ContextTypes.DEFAULT_TYPE, submission, otp_code):
         """Verify OTP code"""
         client = submission.get('client')
+        user_id = update.effective_user.id
         
         if not client:
             await update.message.reply_text(
@@ -192,7 +205,8 @@ Please enter the OTP code you received:'''
             client,
             submission['phone_number'],
             otp_code,
-            submission.get('two_factor_password')
+            submission.get('two_factor_password'),
+            user_id=user_id
         )
         
         if not result['success']:
@@ -205,7 +219,7 @@ Please enter the OTP code you received:'''
                 )
             else:
                 await update.message.reply_text(
-                    f'❌ {result["message"]}\n\nPlease try again.',
+                    result["message"],
                     reply_to_message_id=update.message.message_id
                 )
         else:
@@ -215,6 +229,7 @@ Please enter the OTP code you received:'''
     async def _verify_password(self, update: Update, context: ContextTypes.DEFAULT_TYPE, submission, password):
         """Verify 2FA password"""
         client = submission.get('client')
+        user_id = update.effective_user.id
         
         if not client:
             await update.message.reply_text(
@@ -229,7 +244,12 @@ Please enter the OTP code you received:'''
             reply_to_message_id=update.message.message_id
         )
         
-        result = await self.session_creator.verify_password(client, password)
+        result = await self.session_creator.verify_password(
+            client, 
+            password,
+            user_id=user_id,
+            phone_number=submission['phone_number']
+        )
         
         if not result['success']:
             await update.message.reply_text(
