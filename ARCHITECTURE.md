@@ -85,7 +85,7 @@ Both components share a common SQLite database and configuration.
 2. Bot automatically detects it's a phone number (regex: `^\+[1-9]\d{1,14}$`)
 3. Phone is parsed and country is detected (ISO2 code)
 4. Bot validates country is supported
-5. User provides API credentials (API ID, API Hash)
+5. Bot uses centralized API credentials (from BOT_API_ID and BOT_API_HASH in config)
 6. User provides 2FA password (if enabled in settings)
 7. Bot creates Telethon session and sends OTP
 8. User enters OTP code
@@ -201,7 +201,7 @@ Country auto-detected (ISO2)
 Country validated
        │
        ▼
-Request API credentials
+Use bot's API credentials
        │
        ▼
 Request 2FA (if enabled)
@@ -404,10 +404,10 @@ Server
 ## Error Handling
 
 ### Bot Errors
-- Invalid phone format → User-friendly message
-- Invalid API credentials → Retry option
+- Invalid phone format → User-friendly error message
+- Session creation failure → Error message with restart option
 - OTP timeout → Restart flow
-- Session creation failure → Log and notify
+- Invalid OTP code → Error message with retry option
 
 ### Web Admin Errors
 - Database errors → Rollback transaction

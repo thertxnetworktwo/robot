@@ -7,6 +7,7 @@ from bot.services.session_creator import SessionCreator
 from bot.services.spam_checker import SpamChecker
 from bot.services.contact_checker import ContactChecker
 from bot.services.freeze_checker import FreezeChecker
+import config
 import asyncio
 
 
@@ -32,45 +33,76 @@ class AccountHandler:
         # Check if bot is locked
         add_locked = db.get_setting('add_account_locked', 'unlocked')
         if add_locked == 'locked':
-            await update.message.reply_text('🔒 Account submission is currently locked. Please try again later.')
+            await update.message.reply_text(
+                '🔒 Account submission is currently locked. Please try again later.',
+                reply_to_message_id=update.message.message_id
+            )
             return True
         
         # Parse and detect country
         country_info = CountryDetector.detect_country(text)
         
         if not country_info:
-            await update.message.reply_text('❌ Invalid phone number. Please send a valid phone number with + prefix.\n\nExample: +8801712345678')
+            await update.message.reply_text(
+                '❌ Invalid phone number. Please send a valid phone number with + prefix.\n\nExample: +8801712345678',
+                reply_to_message_id=update.message.message_id
+            )
             return True
         
         # Check if country is supported
         if not country_info['is_active']:
-            await update.message.reply_text(f'❌ Sorry, we currently don\'t support {country_info["name"]} ({country_info["iso2_code"]}).')
+            await update.message.reply_text(
+                f'❌ Sorry, we currently don\'t support {country_info["name"]} ({country_info["iso2_code"]}).',
+                reply_to_message_id=update.message.message_id
+            )
             return True
         
         # Check capacity
         if country_info['current_count'] >= country_info['capacity']:
-            await update.message.reply_text(f'❌ Sorry, we\'ve reached the capacity limit for {country_info["name"]}. Please try another country.')
+            await update.message.reply_text(
+                f'❌ Sorry, we\'ve reached the capacity limit for {country_info["name"]}. Please try another country.',
+                reply_to_message_id=update.message.message_id
+            )
             return True
         
         # Start account submission process
         phone_number = country_info['phone_info']['phone_number']
         
         context.user_data['account_submission'] = {
-            'step': 'api_id',
+            'step': 'two_fa_or_otp',
             'phone_number': phone_number,
             'country_iso2': country_info['iso2_code'],
             'country_name': country_info['name'],
-            'price': country_info['price']
+            'price': country_info['price'],
+            'api_id': config.BOT_API_ID,
+            'api_hash': config.BOT_API_HASH
         }
         
-        msg = f'''📱 Detected {country_info["name"]} ({country_info["iso2_code"]}) phone number
+        # Check if 2FA is required
+        two_fa_required = db.get_setting('two_fa_required', 'off')
         
+        if two_fa_required == 'on':
+            msg = f'''📱 Detected {country_info["name"]} ({country_info["iso2_code"]}) phone number
+
 Phone: {phone_number}
 Price: ${country_info["price"]:.2f}
 
-Please provide your Telegram API ID:'''
+Please send your 2FA password (or /skip if you don\'t have one):'''
+            context.user_data['account_submission']['step'] = 'two_fa'
+        else:
+            # Skip directly to OTP
+            msg = f'''📱 Detected {country_info["name"]} ({country_info["iso2_code"]}) phone number
+
+Phone: {phone_number}
+Price: ${country_info["price"]:.2f}
+
+⏳ Sending verification code to your phone number...'''
+            # Request OTP immediately
+            await update.message.reply_text(msg, reply_to_message_id=update.message.message_id)
+            await self._request_otp(update, context, context.user_data['account_submission'])
+            return True
         
-        await update.message.reply_text(msg)
+        await update.message.reply_text(msg, reply_to_message_id=update.message.message_id)
         return True
     
     async def handle_submission_step(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -82,34 +114,7 @@ Please provide your Telegram API ID:'''
         step = submission.get('step')
         text = update.message.text.strip()
         
-        if step == 'api_id':
-            # Validate API ID
-            if not text.isdigit():
-                await update.message.reply_text('❌ Invalid API ID. Please send a valid numeric API ID.')
-                return True
-            
-            submission['api_id'] = text
-            submission['step'] = 'api_hash'
-            
-            await update.message.reply_text('Now send your API Hash:')
-            return True
-        
-        elif step == 'api_hash':
-            submission['api_hash'] = text
-            
-            # Check if 2FA is required
-            two_fa_required = db.get_setting('two_fa_required', 'off')
-            
-            if two_fa_required == 'on':
-                submission['step'] = 'two_fa'
-                await update.message.reply_text('Please send your 2FA password (or /skip if you don\'t have one):')
-            else:
-                # Skip to OTP
-                await self._request_otp(update, context, submission)
-            
-            return True
-        
-        elif step == 'two_fa':
+        if step == 'two_fa':
             if text == '/skip':
                 submission['two_factor_password'] = None
             else:
@@ -130,7 +135,12 @@ Please provide your Telegram API ID:'''
     
     async def _request_otp(self, update: Update, context: ContextTypes.DEFAULT_TYPE, submission):
         """Request OTP from Telegram"""
-        await update.message.reply_text('⏳ Sending verification code to your phone number...')
+        # If this is not called from the phone detection (where we already sent a message)
+        if submission.get('step') != 'two_fa_or_otp':
+            await update.message.reply_text(
+                '⏳ Sending verification code to your phone number...',
+                reply_to_message_id=update.message.message_id
+            )
         
         # Create session and request OTP
         result = await self.session_creator.create_session(
@@ -142,7 +152,10 @@ Please provide your Telegram API ID:'''
         )
         
         if not result['success']:
-            await update.message.reply_text(f'❌ Error: {result["message"]}\n\nPlease try again with /start')
+            await update.message.reply_text(
+                f'❌ Error: {result["message"]}\n\nPlease try again with /start',
+                reply_to_message_id=update.message.message_id
+            )
             del context.user_data['account_submission']
             return
         
@@ -151,18 +164,29 @@ Please provide your Telegram API ID:'''
         submission['session_path'] = result['session_path']
         submission['step'] = 'otp'
         
-        await update.message.reply_text('✅ Verification code sent!\n\nPlease enter the OTP code you received:')
+        # Format message with phone number
+        msg = f'''✅ The code sent to number {submission['phone_number']}
+
+Please enter the OTP code you received:'''
+        
+        await update.message.reply_text(msg, reply_to_message_id=update.message.message_id)
     
     async def _verify_otp(self, update: Update, context: ContextTypes.DEFAULT_TYPE, submission, otp_code):
         """Verify OTP code"""
         client = submission.get('client')
         
         if not client:
-            await update.message.reply_text('❌ Session expired. Please start again.')
+            await update.message.reply_text(
+                '❌ Session expired. Please start again.',
+                reply_to_message_id=update.message.message_id
+            )
             del context.user_data['account_submission']
             return
         
-        await update.message.reply_text('⏳ Verifying OTP...')
+        await update.message.reply_text(
+            '⏳ Verifying OTP...',
+            reply_to_message_id=update.message.message_id
+        )
         
         result = await self.session_creator.verify_otp(
             client,
@@ -175,9 +199,15 @@ Please provide your Telegram API ID:'''
             if result.get('requires_password'):
                 submission['client'] = result['client']
                 submission['step'] = 'password'
-                await update.message.reply_text('🔐 2FA is enabled on this account.\n\nPlease enter your 2FA password:')
+                await update.message.reply_text(
+                    '🔐 2FA is enabled on this account.\n\nPlease enter your 2FA password:',
+                    reply_to_message_id=update.message.message_id
+                )
             else:
-                await update.message.reply_text(f'❌ {result["message"]}\n\nPlease try again.')
+                await update.message.reply_text(
+                    f'❌ {result["message"]}\n\nPlease try again.',
+                    reply_to_message_id=update.message.message_id
+                )
         else:
             # OTP verified successfully
             await self._complete_submission(update, context, submission, result['session_string'])
@@ -187,16 +217,25 @@ Please provide your Telegram API ID:'''
         client = submission.get('client')
         
         if not client:
-            await update.message.reply_text('❌ Session expired. Please start again.')
+            await update.message.reply_text(
+                '❌ Session expired. Please start again.',
+                reply_to_message_id=update.message.message_id
+            )
             del context.user_data['account_submission']
             return
         
-        await update.message.reply_text('⏳ Verifying password...')
+        await update.message.reply_text(
+            '⏳ Verifying password...',
+            reply_to_message_id=update.message.message_id
+        )
         
         result = await self.session_creator.verify_password(client, password)
         
         if not result['success']:
-            await update.message.reply_text(f'❌ {result["message"]}\n\nPlease try again.')
+            await update.message.reply_text(
+                f'❌ {result["message"]}\n\nPlease try again.',
+                reply_to_message_id=update.message.message_id
+            )
         else:
             # Password verified successfully
             await self._complete_submission(update, context, submission, result['session_string'])
@@ -224,7 +263,8 @@ Please provide your Telegram API ID:'''
                 db_account.session_string = session_string
                 db_session.commit()
         
-        await update.message.reply_text(f'''✅ Session created successfully!
+        await update.message.reply_text(
+            f'''✅ Session created successfully!
 
 ⏳ Your account is now pending approval. 
 
@@ -233,7 +273,9 @@ We will verify:
 - Contact availability
 - Account status
 
-You will be notified once your account is approved and balance is added.''')
+You will be notified once your account is approved and balance is added.''',
+            reply_to_message_id=update.message.message_id
+        )
         
         # Clear submission data
         del context.user_data['account_submission']
