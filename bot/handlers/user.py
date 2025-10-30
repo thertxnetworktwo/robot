@@ -19,7 +19,7 @@ class UserHandler:
         if not welcome_msg:
             welcome_msg = '👋 Welcome to Session Bot!\n\nSimply send your phone number with + prefix to add an account.\n\nExample: +8801712345678'
         
-        await update.message.reply_text(welcome_msg)
+        await update.message.reply_text(welcome_msg, reply_to_message_id=update.message.message_id)
     
     @staticmethod
     async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -37,7 +37,7 @@ class UserHandler:
 
 To add an account, just send your phone number with + prefix!'''
         
-        await update.message.reply_text(help_msg)
+        await update.message.reply_text(help_msg, reply_to_message_id=update.message.message_id)
     
     @staticmethod
     async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,7 +50,7 @@ To add an account, just send your phone number with + prefix!'''
         else:
             balance_text = '💰 Your Balance: $0.00'
         
-        await update.message.reply_text(balance_text)
+        await update.message.reply_text(balance_text, reply_to_message_id=update.message.message_id)
     
     @staticmethod
     async def my_accounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -59,7 +59,10 @@ To add an account, just send your phone number with + prefix!'''
         accounts = db.get_user_accounts(user_id)
         
         if not accounts:
-            await update.message.reply_text('📱 You have no accounts yet.\n\nSend a phone number with + prefix to add one!')
+            await update.message.reply_text(
+                '📱 You have no accounts yet.\n\nSend a phone number with + prefix to add one!',
+                reply_to_message_id=update.message.message_id
+            )
             return
         
         # Build accounts list
@@ -77,7 +80,7 @@ To add an account, just send your phone number with + prefix!'''
             text += f'   Country: {acc.country_iso2}\n'
             text += f'   Status: {acc.status.upper()}\n\n'
         
-        await update.message.reply_text(text)
+        await update.message.reply_text(text, reply_to_message_id=update.message.message_id)
     
     @staticmethod
     async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -86,4 +89,10 @@ To add an account, just send your phone number with + prefix!'''
         if 'account_submission' in context.user_data:
             del context.user_data['account_submission']
         
-        await update.message.reply_text('❌ Operation cancelled. Returned to main menu.')
+        if 'withdrawal' in context.user_data:
+            del context.user_data['withdrawal']
+        
+        await update.message.reply_text(
+            '❌ Operation cancelled.',
+            reply_to_message_id=update.message.message_id
+        )
