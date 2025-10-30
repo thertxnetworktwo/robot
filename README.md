@@ -112,6 +112,29 @@ Default login:
    - **Settings**: Configure bot behavior
    - **Statistics**: View revenue reports
 
+## Testing
+
+### Run Setup Tests
+```bash
+python test_setup.py
+```
+Tests basic functionality:
+- Import verification
+- Database initialization
+- Phone number parsing
+- Country detection
+
+### Run Security Tests
+```bash
+python test_security.py
+```
+Tests security features:
+- OTP code hashing
+- Format validation
+- Rate limiting
+- Login attempt tracking
+- Code reuse detection
+
 ## Project Structure
 
 ```
@@ -146,14 +169,26 @@ robot/
 - **withdrawals**: Withdrawal requests
 - **messages**: Customizable bot messages
 - **channels**: Mandatory channels (future)
+- **login_attempts**: Login attempt tracking (security)
 
 ## Security
 
+### Authentication & Access Control
 - Admin passwords are hashed with bcrypt
 - Session files stored securely
 - Flask sessions with secure cookies
 - Input validation on all user inputs
 - SQL injection prevention with SQLAlchemy ORM
+
+### OTP Security Features
+- **OTP Code Reuse Prevention**: Detects and blocks reused verification codes
+- **Rate Limiting**: Maximum 5 failed attempts per phone number per hour
+- **Login Attempt Tracking**: Complete audit trail of all login attempts
+- **Code Format Validation**: Pre-validation of OTP codes before API calls
+- **Security Warnings**: User education about code sharing risks
+- **Secure Code Hashing**: HMAC-SHA256 for code reuse detection
+
+For detailed security information, see [SECURITY.md](SECURITY.md).
 
 ## Technologies
 
